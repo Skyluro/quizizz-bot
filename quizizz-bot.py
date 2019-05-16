@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, time, json, requests, sys, random, string, tkinter, subprocess, tempfile, types
+import os, time, json, requests, sys, random, string, tkinter, subprocess, tempfile
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
@@ -25,23 +25,19 @@ def find_answers(quizID):
 		if question["type"] == "MCQ":
 			if question["structure"]["options"][int(question["structure"]["answer"])]["text"] == "":
 				# image answer
-				answer = question["structure"]["options"][int(question["structure"]["answer"])]["media"][0]["url"]
+				answer = question["structure"]["options"][int(question["structure"]["answer"])]["media"][0]["url"].replace("&nbsp;"," ").rstrip().lower()
 			else:
-				answer = question["structure"]["options"][int(question["structure"]["answer"])]["text"]
+				answer = question["structure"]["options"][int(question["structure"]["answer"])]["text"].replace("&nbsp;"," ").rstrip().lower()
 		elif question["type"] == "MSQ":
 			# multiple answers
 			answer = []
 			for answerC in question["structure"]["answer"]:
 				if question["structure"]["options"][int(answerC)]["text"] == "":
-					answer.append(question["structure"]["options"][int(answerC)]["media"][0]["url"])
+					answer.append(question["structure"]["options"][int(answerC)]["media"][0]["url"].replace("&nbsp;"," ").rstrip().lower())
 				else:
-					answer.append(question["structure"]["options"][int(answerC)]["text"])
+					answer.append(question["structure"]["options"][int(answerC)]["text"].replace("&nbsp;"," ").rstrip().lower())
 		questionID = question["structure"]["query"]["text"]
-		if isinstance(answer, list):
-			ans = answer[0]
-		else:
-			ans = answer
-		answers[questionID.replace("&nbsp;"," ").replace(u'\xa0',u' ').rstrip().lower()] = ans.replace("&nbsp;"," ").rstrip().lower()
+		answers[questionID.replace("&nbsp;"," ").replace(u'\xa0',u' ').rstrip().lower()] = answer
 	return answers
 
 def play(gamecode, name, short_delay=1, delay=3, long_delay=5):
@@ -93,28 +89,26 @@ def play(gamecode, name, short_delay=1, delay=3, long_delay=5):
 			try:
 				waitForItem(driver,'.question-text-color',timeout=20)
 				waitForItem(driver,'.options-container',timeout=20)
-				time.sleep(1.5)
 			except TimeoutException:
 				driver.quit()
 				break
 			try:
+				time.sleep(2)
 				questionAnswer = answers[driver.find_element_by_css_selector('.question-text-color').get_attribute('innerHTML').lower().replace("&nbsp;"," ")]
 				choices = driver.find_element_by_css_selector('.options-container').find_elements_by_css_selector('.option')
 				firstAnswer = True
+				
 				for answer in choices:
 					try:
 						if isinstance(questionAnswer, list):
 							# multiple select
 							if firstAnswer:
-								time.sleep(short_delay)
+								time.sleep(0.65)
 								firstAnswer = False
 							if answer.find_element_by_css_selector(".resizeable").get_attribute('innerHTML').lower() in questionAnswer:
 								answer.click()
-								time.sleep(4)
-								break
 						elif answer.find_element_by_css_selector(".resizeable").get_attribute('innerHTML').lower() == questionAnswer:
 							answer.click()
-							time.sleep(4)
 							break
 					except NoSuchElementException:
 						# Is an image
@@ -124,7 +118,6 @@ def play(gamecode, name, short_delay=1, delay=3, long_delay=5):
 							for correctAnswer in questionAnswer:
 								if style in correctAnswer:
 									answer.click()
-									break
 						elif questionAnswer in style:
 							answer.click()
 							break
@@ -147,7 +140,8 @@ def play(gamecode, name, short_delay=1, delay=3, long_delay=5):
 					"user.followed_by.count")
 			except WebDriverException:
 				print("Ignorable Error! If persists and question is not being answered, answer yourself")
-				time.sleep(1)				
+				time.sleep(1)	
+		time.sleep(4)
 	driver.quit()
 
 #CMD	
