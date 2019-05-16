@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, time, json, requests, sys, random, string, tkinter, subprocess, tempfile
+import os, time, json, requests, sys, random, string, tkinter, subprocess, tempfile, types
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
@@ -11,34 +11,38 @@ def waitForItem(driver, css, timeout=20):
     WebDriverWait(driver, timeout).until(expected_conditions.visibility_of_element_located((By.CSS_SELECTOR, css)))
 
 def randomword(length):
-   letters = string.ascii_lowercase
-   return ''.join(random.choice(letters) for i in range(length))
+	letters = string.ascii_lowercase
+	return ''.join(random.choice(letters) for i in range(length))
 
 def find_answers(quizID):
-    quizInfo = requests.get(f"https://quizizz.com/quiz/{quizID}/").json()
-    answers = {}
-    if "error" in quizInfo:
-        print("[error] I couldn't find that quiz")
-        exit()
+	quizInfo = requests.get(f"https://quizizz.com/quiz/{quizID}/").json()
+	answers = {}
+	if "error" in quizInfo:
+		print("[error] I couldn't find that quiz")
+		exit()
 
-    for question in quizInfo["data"]["quiz"]["info"]["questions"]:
-        if question["type"] == "MCQ":
-            if question["structure"]["options"][int(question["structure"]["answer"])]["text"] == "":
-                # image answer
-                answer = question["structure"]["options"][int(question["structure"]["answer"])]["media"][0]["url"]
-            else:
-                answer = question["structure"]["options"][int(question["structure"]["answer"])]["text"]
-        elif question["type"] == "MSQ":
-            # multiple answers
-            answer = []
-            for answerC in question["structure"]["answer"]:
-                if question["structure"]["options"][int(answerC)]["text"] == "":
-                    answer.append(question["structure"]["options"][int(answerC)]["media"][0]["url"])
-                else:
-                    answer.append(question["structure"]["options"][int(answerC)]["text"])
-        questionID = question["structure"]["query"]["text"]
-        answers[questionID.replace("&nbsp;"," ").replace(u'\xa0',u' ').rstrip().lower()] = answer.replace("&nbsp;"," ").rstrip().lower()
-    return answers
+	for question in quizInfo["data"]["quiz"]["info"]["questions"]:
+		if question["type"] == "MCQ":
+			if question["structure"]["options"][int(question["structure"]["answer"])]["text"] == "":
+				# image answer
+				answer = question["structure"]["options"][int(question["structure"]["answer"])]["media"][0]["url"]
+			else:
+				answer = question["structure"]["options"][int(question["structure"]["answer"])]["text"]
+		elif question["type"] == "MSQ":
+			# multiple answers
+			answer = []
+			for answerC in question["structure"]["answer"]:
+				if question["structure"]["options"][int(answerC)]["text"] == "":
+					answer.append(question["structure"]["options"][int(answerC)]["media"][0]["url"])
+				else:
+					answer.append(question["structure"]["options"][int(answerC)]["text"])
+		questionID = question["structure"]["query"]["text"]
+		if isinstance(answer, list):
+			ans = answer[0]
+		else:
+			ans = answer
+		answers[questionID.replace("&nbsp;"," ").replace(u'\xa0',u' ').rstrip().lower()] = ans.replace("&nbsp;"," ").rstrip().lower()
+	return answers
 
 def play(gamecode, name, short_delay=1, delay=3, long_delay=5):
 	# enable browser logging
@@ -89,7 +93,7 @@ def play(gamecode, name, short_delay=1, delay=3, long_delay=5):
 			try:
 				waitForItem(driver,'.question-text-color',timeout=20)
 				waitForItem(driver,'.options-container',timeout=20)
-				time.sleep(1)
+				time.sleep(1.5)
 			except TimeoutException:
 				driver.quit()
 				break
