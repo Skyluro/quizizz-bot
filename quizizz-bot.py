@@ -70,7 +70,7 @@ def play(gamecode, name, short_delay=1, delay=3, long_delay=5):
 				s = line.split("recommend?quizId=",1)[1]
 				GameID = s.split('"')[0]
 				print("found: " + GameID)
-				print("You can visit https://quizizz.com/quiz/" + GameID + " for answer. (You will need a quizizz account)")
+				print("You can visit https://quizizz.com/admin/quiz/" + GameID + " for answer. (You will need a quizizz account)")
 				break
 	os.remove("logs.txt")
 	
