@@ -17,6 +17,7 @@ Note:
 
 ### Recently Fixed
 
++ Quizizz Live
 + Multi-Select bug
 + QuizID Obfuscation
 
