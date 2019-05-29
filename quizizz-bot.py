@@ -42,6 +42,8 @@ def find_answers(quizID):
 
 def play(gamecode, name, short_delay=1, delay=3, long_delay=5):
 	# enable browser logging
+	live = input("If game is live put 1, else any >>> ")
+	
 	d = DesiredCapabilities.CHROME
 	d['loggingPrefs'] = { 'performance':'ALL' }
 	driver = webdriver.Chrome(desired_capabilities=d)
@@ -75,15 +77,22 @@ def play(gamecode, name, short_delay=1, delay=3, long_delay=5):
 	os.remove("logs.txt")
 	
 	#Continue play
-	waitForItem(driver,'.skip-btn',timeout=20)
-	time.sleep(0.5)
-	driver.find_element_by_css_selector('.skip-btn').click()
-	waitForItem(driver,'.game-start-btn',timeout=20)
-	time.sleep(0.5)
-	driver.find_element_by_css_selector('.game-start-btn').click()
+	#
+	if live == '1':
+		print()
+		print("WARNING: The web driver has a maximum timeout of 3min, you will get an error should the game not start within 3 mins. Run again if this happens")
+		waitForItem(driver, '.question-number-wrapper', timeout=180)
+	else:
+		waitForItem(driver,'.skip-btn',timeout=20)
+		time.sleep(0.5)
+		driver.find_element_by_css_selector('.skip-btn').click()
+		waitForItem(driver,'.game-start-btn',timeout=20)
+		time.sleep(0.5)
+		driver.find_element_by_css_selector('.game-start-btn').click()
+		waitForItem(driver, '.question-number-wrapper', timeout=20)
+	
 	answers = find_answers(GameID)
 	print("[info] answers found")
-	time.sleep(2);
 	while True:
 		try:
 			try:
@@ -93,7 +102,7 @@ def play(gamecode, name, short_delay=1, delay=3, long_delay=5):
 				driver.quit()
 				break
 			try:
-				time.sleep(2)
+				time.sleep(1.5)
 				questionAnswer = answers[driver.find_element_by_css_selector('.question-text-color').get_attribute('innerHTML').lower().replace("&nbsp;"," ")]
 				choices = driver.find_element_by_css_selector('.options-container').find_elements_by_css_selector('.option')
 				firstAnswer = True
@@ -140,8 +149,8 @@ def play(gamecode, name, short_delay=1, delay=3, long_delay=5):
 					"user.followed_by.count")
 			except WebDriverException:
 				print("Ignorable Error! If persists and question is not being answered, answer yourself")
-				time.sleep(1)	
-		time.sleep(4)
+				time.sleep(1)
+		time.sleep(3)
 	driver.quit()
 
 #CMD	
